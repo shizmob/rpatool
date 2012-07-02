@@ -2,7 +2,7 @@ rpatool
 =======
 
 This is a simple tool allowing you to create, modify and extract Ren'Py Archive (.rpa/.rpi) files.
-Currently, only writing RPAv2/RPAv3 archives is supported.
+Currently, only writing to RPAv2/RPAv3 archives is supported.
 
 Usage
 -----
@@ -15,14 +15,14 @@ Usage
       ARCHIVE               The Ren'py archive file to operate on
       FILE                  Zero or more files to operate on
     
-    modes of operations:
+    action arguments:
       -l, --list            List files in archive ARCHIVE
       -x, --extract         Extract FILEs from ARCHIVE
       -c, --create          Creative ARCHIVE from FILEs
       -d, --delete          Delete FILEs from ARCHIVE
       -a, --append          Append FILEs to ARCHIVE
     
-    optional arguments
+    optional arguments:
       -o OUTFILE, --outfile OUTFILE
                             An alternative output archive file when appending to or
                             deleting from archives, or output directory when extracting.
@@ -75,9 +75,13 @@ A small overview:
 The constructor, which will optionally load an archive file.
 
 `file`: the archive file to open. If None, no archive will be attempted to open.
+
 `version`: the archive format version used to save the archive when `RenPyArchive.save([file])` is called. Default: 3
+
 `padlength`: the maximum number of bytes of padding to put between files when saving. Default: 0
+
 `key`: the obfuscation key used when saving RPAv3 archives. Default: 0xDEADBEEF
+
 `verbose`: print info on what we are doing to the command line. Default: False
 
     RenPyArchive.load(filename)
@@ -106,7 +110,7 @@ Read and return the content of file `filename` in the archive. Will raise an `IO
 
 License
 -------
-rpatool is released dual-licensed under the 3-clause BSD/'new BSD' license and the WTFPL. See the LICENSE file for more details.
+rpatool is dual-licensed under the 3-clause BSD/'new BSD' license and the WTFPL. See the LICENSE file for more details.
 
 Disclaimer
 ----------
