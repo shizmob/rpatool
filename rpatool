@@ -26,25 +26,27 @@ class RenPyArchive:
         self.key = key
         self.verbose = verbose
         
-        if file != None:
+        if file is not None:
             self.load(file)
         else:
             self.version = version
     
     def __del__(self):
-        if self.handle != None:
+        if self.handle is not None:
             self.handle.close()
     
     # Determine archive version.
     def get_version(self):
         self.handle.seek(0)
         magic = self.handle.readline().decode('utf-8')
+        
         if magic.startswith(self.RPA3_MAGIC):
             return 3
         elif magic.startswith(self.RPA2_MAGIC):
             return 2
         elif self.file.endswith('.rpi'):
             return 1
+        
         raise ValueError('the given file is not a valid Ren\'Py archive, or an unsupported version')
     
     # Extract file indexes from opened archive.
@@ -53,17 +55,17 @@ class RenPyArchive:
         indexes = None
         
         if self.version == 2 or self.version == 3:
-            # Fetch metadata
+            # Fetch metadata.
             metadata = self.handle.readline()
             offset = int(metadata[8:24], 16)
             if self.version == 3:
                 self.key = int(metadata[25:33], 16)
             
-            # Load in indexes
+            # Load in indexes.
             self.handle.seek(offset)
             indexes = pickle.loads(self.handle.read().decode('zlib'))
             
-            # Deobfuscate indexes
+            # Deobfuscate indexes.
             if self.version == 3:
                 obfuscated_indexes = indexes
                 indexes = {}
@@ -111,12 +113,12 @@ class RenPyArchive:
     def read(self, filename):
         filename = self.convert_filename(filename)
         
-        # Check if the file exists in our indexes
+        # Check if the file exists in our indexes.
         if not filename in self.files and not filename in self.indexes:
             raise IOError(errno.ENOENT, 'the requested file {0} does not exist in the given Ren\'Py archive'.format(filename))
         
-        # If it's in our opened archive index, and our archive handle isn't valid, something is obviously wrong
-        if not filename in self.files and filename in self.indexes and self.handle == None:
+        # If it's in our opened archive index, and our archive handle isn't valid, something is obviously wrong.
+        if not filename in self.files and filename in self.indexes and self.handle is None:
             raise IOError(errno.ENOENT, 'the requested file {0} does not exist in the given Ren\'Py archive'.format(filename))
         
         # Check our simplified internal indexes first, in case someone wants to read a file they added before without saving, for some unholy reason.
@@ -138,7 +140,7 @@ class RenPyArchive:
     
     # Modify a file in archive or internal storage.
     def change(self, filename, contents):
-        # Our 'change' is basically removing the file from our indexes first, and then re-add it.
+        # Our 'change' is basically removing the file from our indexes first, and then re-adding it.
         self.remove(filename)
         self.add(filename, contents)
     
@@ -165,7 +167,7 @@ class RenPyArchive:
     
     # Load archive.
     def load(self, filename):
-        if self.handle != None:
+        if self.handle is not None:
             self.handle.close()
         self.file = filename
         self.files = {}
@@ -175,20 +177,20 @@ class RenPyArchive:
     
     # Save current state into a new file, merging archive and internal storage, rebuilding indexes, and optionally saving in another format version.
     def save(self, filename = None):
-        if filename == None:
+        if filename is None:
             filename = self.file
-        if filename == None:
+        if filename is None:
             raise ValueError('no target file found for saving archive')
         if self.version != 2 and self.version != 3:
             raise ValueError('saving is only supported for version 2 and 3 archives')
         
         self.verbose_print('Rebuilding archive index...')
-        # Fill our own files structure with the files added or changed in this session
+        # Fill our own files structure with the files added or changed in this session.
         files = self.files
-        # First, read files from the current archive into our files structure
+        # First, read files from the current archive into our files structure.
         for file in self.indexes.keys():
             content = self.read(file)
-            # Remove from indexes array once read, add to our own array
+            # Remove from indexes array once read, add to our own array.
             del self.indexes[file]
             files[file] = content
         
@@ -232,7 +234,7 @@ class RenPyArchive:
         # We're done, close it.
         archive.close()
         
-        # Reload the file in our inner database
+        # Reload the file in our inner database.
         self.load(filename)
         
 if __name__ == "__main__":
@@ -264,20 +266,20 @@ if __name__ == "__main__":
     parser.add_argument('-V', '--version', action='version', version='rpatool v0.8', help='Show version information.')
     arguments = parser.parse_args()
     
-    # Determine RPA version
+    # Determine RPA version.
     if arguments.two:
         version = 2
     else:
         version = 3
     
-    # Determine RPAv3 key
-    if 'key' in arguments and arguments.key != None:
+    # Determine RPAv3 key.
+    if 'key' in arguments and arguments.key is not None:
         key = int(arguments.key, 16)
     else:
         key = 0xDEADBEEF
     
-    # Determine padding bytes
-    if 'padding' in arguments and arguments.padding != None:
+    # Determine padding bytes.
+    if 'padding' in arguments and arguments.padding is not None:
         padding = int(arguments.padding)
     else:
         padding = 0
@@ -288,7 +290,7 @@ if __name__ == "__main__":
         output = arguments.archive
     else:
         archive = arguments.archive
-        if 'outfile' in arguments and arguments.outfile != None:
+        if 'outfile' in arguments and arguments.outfile is not None:
             output = arguments.outfile
         else:
             # Default output directory for extraction is the current directory.
@@ -298,7 +300,7 @@ if __name__ == "__main__":
                 output = arguments.archive
     
     # Normalize files.
-    if len(arguments.files) > 0 and type(arguments.files[0]) == list:
+    if len(arguments.files) > 0 and isinstance(arguments.files[0], list):
         arguments.files = arguments.files[0]
     
     try:

@@ -6,7 +6,7 @@ Currently, only writing to RPAv2/RPAv3 archives is supported.
 
 Usage
 -----
-    rpatool [-l] [-x] [-c] [-d] [-a] [-o OUTFILE] [-2] [-3] [-k KEY]
+    rpatool [-l|-x|-c|-d] [-a] [-o OUTFILE] [-2] [-3] [-k KEY]
             [-p COUNT] [-h] [-v] [-V]
             ARCHIVE [FILE [FILE ...]]
 
@@ -15,7 +15,7 @@ Usage
       ARCHIVE               The Ren'py archive file to operate on
       FILE                  Zero or more files to operate on
     
-    action arguments:
+    actions:
       -l, --list            List files in archive ARCHIVE
       -x, --extract         Extract FILEs from ARCHIVE
       -c, --create          Creative ARCHIVE from FILEs
