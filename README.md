@@ -110,7 +110,7 @@ Read and return the content of file `filename` in the archive. Will raise an `IO
 
 License
 -------
-rpatool is dual-licensed under the 3-clause BSD/'new BSD' license and the WTFPL. See the LICENSE file for more details.
+rpatool is licensed under the WTFPL. See the LICENSE file for more details.
 
 Disclaimer
 ----------
