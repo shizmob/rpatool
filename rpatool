@@ -114,16 +114,16 @@ class RenPyArchive:
         filename = self.convert_filename(filename)
         
         # Check if the file exists in our indexes.
-        if not filename in self.files and not filename in self.indexes:
+        if filename not in self.files and filename not in self.indexes:
             raise IOError(errno.ENOENT, 'the requested file {0} does not exist in the given Ren\'Py archive'.format(filename))
         
         # If it's in our opened archive index, and our archive handle isn't valid, something is obviously wrong.
-        if not filename in self.files and filename in self.indexes and self.handle is None:
+        if filename not in self.files and filename in self.indexes and self.handle is None:
             raise IOError(errno.ENOENT, 'the requested file {0} does not exist in the given Ren\'Py archive'.format(filename))
         
         # Check our simplified internal indexes first, in case someone wants to read a file they added before without saving, for some unholy reason.
         if filename in self.files:
-            self.verbose_print('Reading file {0} from internal storage...'.format(filename))
+            self.verbose_print('Reading file {0} from internal storage...'.format(filename.encode('utf-8')))
             return self.files[filename]
         # We need to read the file from our open archive.
         else:
@@ -134,7 +134,7 @@ class RenPyArchive:
                 (offset, length) = self.indexes[filename][0]
                 prefix = ''
             
-            self.verbose_print('Reading file {0} from data file {1}... (offset = {2}, length = {3} bytes)'.format(filename, self.file, offset, length))
+            self.verbose_print('Reading file {0} from data file {1}... (offset = {2}, length = {3} bytes)'.format(filename.encode('utf-8'), self.file, offset, length))
             self.handle.seek(offset)
             return prefix + self.handle.read(length - len(prefix))
     
@@ -146,24 +146,24 @@ class RenPyArchive:
     
     # Add a file to the internal storage.
     def add(self, filename, contents):
-        filename = self.convert_filename(filename)
+        filename = unicode(self.convert_filename(filename), 'utf-8')
         if filename in self.files or filename in self.indexes:
             raise ValueError('file {0} already exists in archive'.format(filename))
             
-        self.verbose_print('Adding file {0} to archive... (length = {1} bytes)'.format(filename, len(contents)))
+        self.verbose_print('Adding file {0} to archive... (length = {1} bytes)'.format(filename.encode('utf-8'), len(contents)))
         self.files[filename] = contents
     
     # Remove a file from archive or internal storage.
     def remove(self, filename):
-        filename = self.convert_filename(filename)
+        filename = unicode(self.convert_filename(filename), 'utf-8')
         if filename in self.files:
-            self.verbose_print('Removing file {0} from internal storage...'.format(filename))
+            self.verbose_print('Removing file {0} from internal storage...'.format(filename.encode('utf-8')))
             del self.files[filename]
         elif filename in self.indexes:
-            self.verbose_print('Removing file {0} from archive indexes...'.format(filename))
+            self.verbose_print('Removing file {0} from archive indexes...'.format(filename.encode('utf-8')))
             del self.indexes[filename]
         else:
-            raise IOError(errno.ENOENT, 'the requested file {0} does not exist in this archive'.format(filename))
+            raise IOError(errno.ENOENT, 'the requested file {0} does not exist in this archive'.format(filename.encode('utf-8')))
     
     # Load archive.
     def load(self, filename):
@@ -229,7 +229,7 @@ class RenPyArchive:
         archive.seek(0)
         if self.version == 3:
             archive.write('RPA-3.0 %016x %08x\n' % (offset, self.key))
-        else:    
+        else:
             archive.write('RPA-2.0 %016x\n' % (offset))
         # We're done, close it.
         archive.close()
