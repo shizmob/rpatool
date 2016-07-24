@@ -59,7 +59,9 @@ class RenPyArchive:
             metadata = self.handle.readline()
             offset = int(metadata[8:24], 16)
             if self.version == 3:
-                self.key = int(metadata[25:33], 16)
+                self.key = 0
+                for subkey in metadata[25:].split():
+                    self.key ^= int(subkey, 16)
             
             # Load in indexes.
             self.handle.seek(offset)
