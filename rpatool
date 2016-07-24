@@ -388,7 +388,7 @@ if __name__ == "__main__":
         list = archive.list()
         list.sort()
         for file in list:
-            print file
+            print file.encode('utf-8')
     else:
         print 'No operation given :('
         print 'Use {0} --help for usage details.'.format(sys.argv[0])
