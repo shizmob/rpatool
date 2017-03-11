@@ -6,7 +6,7 @@ Currently, only writing to RPAv2/RPAv3 archives is supported.
 
 Usage
 -----
-    rpatool [-l|-x|-c|-d] [-a] [-o OUTFILE] [-2] [-3] [-k KEY]
+    rpatool [-l|-x|-c|-d|-a] [-o OUTFILE] [-2] [-3] [-k KEY]
             [-p COUNT] [-h] [-v] [-V]
             ARCHIVE [FILE [FILE ...]]
 

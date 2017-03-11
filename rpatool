@@ -57,10 +57,11 @@ class RenPyArchive:
         if self.version == 2 or self.version == 3:
             # Fetch metadata.
             metadata = self.handle.readline()
-            offset = int(metadata[8:24], 16)
+            vals = metadata.split()
+            offset = int(vals[1], 16)
             if self.version == 3:
                 self.key = 0
-                for subkey in metadata[25:].split():
+                for subkey in vals[2:]:
                     self.key ^= int(subkey, 16)
             
             # Load in indexes.
