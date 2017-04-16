@@ -199,9 +199,9 @@ class RenPyArchive:
         
         # Predict header length, we'll write that one last.
         offset = 0
-        if version == 3:
+        if self.version == 3:
             offset = 34
-        elif version == 2:
+        elif self.version == 2:
             offset = 25
         archive = open(filename, 'wb')
         archive.seek(offset)
