@@ -10,19 +10,32 @@ import errno
 import random
 
 if sys.version_info[0] >= 3:
-    def _ensure_unicode(text):
+    def _unicode(text):
         return text
 
-    def _prepare_unicode_for_print(text):
+    def _printable(text):
         return text
+
+    def _unmangle(data):
+        return data.encode('latin1')
+
+    def _unpickle(data):
+        # Specify latin1 encoding to prevent raw byte values from causing an ASCII decode error.
+        return pickle.loads(data, encoding='latin1')
 elif sys.version_info[0] == 2:
-    def _ensure_unicode(text):
+    def _unicode(text):
         if isinstance(text, unicode):
             return text
-        return unicode(text, 'utf-8')
+        return text.decode('utf-8')
 
-    def _prepare_unicode_for_print(text):
+    def _printable(text):
         return text.encode('utf-8')
+
+    def _unmangle(data):
+        return data
+
+    def _unpickle(data):
+        return pickle.loads(data)
 
 class RenPyArchive:
     file = None
@@ -87,7 +100,8 @@ class RenPyArchive:
 
             # Load in indexes.
             self.handle.seek(offset)
-            indexes = pickle.loads(codecs.decode(self.handle.read(), 'zlib'))
+            contents = codecs.decode(self.handle.read(), 'zlib')
+            indexes = _unpickle(contents)
 
             # Deobfuscate indexes.
             if self.version == 3:
@@ -131,26 +145,26 @@ class RenPyArchive:
 
     # Check if a file exists in the archive.
     def has_file(self, filename):
-        filename = _ensure_unicode(filename)
+        filename = _unicode(filename)
         return filename in self.indexes.keys() or filename in self.files.keys()
 
     # Read file from archive or internal storage.
     def read(self, filename):
-        filename = self.convert_filename(_ensure_unicode(filename))
+        filename = self.convert_filename(_unicode(filename))
 
         # Check if the file exists in our indexes.
         if filename not in self.files and filename not in self.indexes:
             raise IOError(errno.ENOENT, 'the requested file {0} does not exist in the given Ren\'Py archive'.format(
-                _prepare_unicode_for_print(filename)))
+                _printable(filename)))
 
         # If it's in our opened archive index, and our archive handle isn't valid, something is obviously wrong.
         if filename not in self.files and filename in self.indexes and self.handle is None:
             raise IOError(errno.ENOENT, 'the requested file {0} does not exist in the given Ren\'Py archive'.format(
-                _prepare_unicode_for_print(filename)))
+                _printable(filename)))
 
         # Check our simplified internal indexes first, in case someone wants to read a file they added before without saving, for some unholy reason.
         if filename in self.files:
-            self.verbose_print('Reading file {0} from internal storage...'.format(_prepare_unicode_for_print(filename)))
+            self.verbose_print('Reading file {0} from internal storage...'.format(_printable(filename)))
             return self.files[filename]
         # We need to read the file from our open archive.
         else:
@@ -162,13 +176,13 @@ class RenPyArchive:
                 prefix = ''
 
             self.verbose_print('Reading file {0} from data file {1}... (offset = {2}, length = {3} bytes)'.format(
-                _prepare_unicode_for_print(filename), self.file, offset, length))
+                _printable(filename), self.file, offset, length))
             self.handle.seek(offset)
-            return codecs.encode(prefix) + self.handle.read(length - len(prefix))
+            return _unmangle(prefix) + self.handle.read(length - len(prefix))
 
     # Modify a file in archive or internal storage.
     def change(self, filename, contents):
-        filename = _ensure_unicode(filename)
+        filename = _unicode(filename)
 
         # Our 'change' is basically removing the file from our indexes first, and then re-adding it.
         self.remove(filename)
@@ -176,29 +190,29 @@ class RenPyArchive:
 
     # Add a file to the internal storage.
     def add(self, filename, contents):
-        filename = self.convert_filename(_ensure_unicode(filename))
+        filename = self.convert_filename(_unicode(filename))
         if filename in self.files or filename in self.indexes:
-            raise ValueError('file {0} already exists in archive'.format(_prepare_unicode_for_print(filename)))
+            raise ValueError('file {0} already exists in archive'.format(_printable(filename)))
 
         self.verbose_print('Adding file {0} to archive... (length = {1} bytes)'.format(
-            _prepare_unicode_for_print(filename), len(contents)))
+            _printable(filename), len(contents)))
         self.files[filename] = contents
 
     # Remove a file from archive or internal storage.
     def remove(self, filename):
-        filename = _ensure_unicode(filename)
+        filename = _unicode(filename)
         if filename in self.files:
-            self.verbose_print('Removing file {0} from internal storage...'.format(_prepare_unicode_for_print(filename)))
+            self.verbose_print('Removing file {0} from internal storage...'.format(_printable(filename)))
             del self.files[filename]
         elif filename in self.indexes:
-            self.verbose_print('Removing file {0} from archive indexes...'.format(_prepare_unicode_for_print(filename)))
+            self.verbose_print('Removing file {0} from archive indexes...'.format(_printable(filename)))
             del self.indexes[filename]
         else:
-            raise IOError(errno.ENOENT, 'the requested file {0} does not exist in this archive'.format(_prepare_unicode_for_print(filename)))
+            raise IOError(errno.ENOENT, 'the requested file {0} does not exist in this archive'.format(_printable(filename)))
 
     # Load archive.
     def load(self, filename):
-        filename = _ensure_unicode(filename)
+        filename = _unicode(filename)
 
         if self.handle is not None:
             self.handle.close()
@@ -210,7 +224,7 @@ class RenPyArchive:
 
     # Save current state into a new file, merging archive and internal storage, rebuilding indexes, and optionally saving in another format version.
     def save(self, filename = None):
-        filename = _ensure_unicode(filename)
+        filename = _unicode(filename)
 
         if filename is None:
             filename = self.file
@@ -322,17 +336,17 @@ if __name__ == "__main__":
     # Determine output file/directory and input archive
     if arguments.create:
         archive = None
-        output = _ensure_unicode(arguments.archive)
+        output = _unicode(arguments.archive)
     else:
-        archive = _ensure_unicode(arguments.archive)
+        archive = _unicode(arguments.archive)
         if 'outfile' in arguments and arguments.outfile is not None:
-            output = _ensure_unicode(arguments.outfile)
+            output = _unicode(arguments.outfile)
         else:
             # Default output directory for extraction is the current directory.
             if arguments.extract:
                 output = '.'
             else:
-                output = _ensure_unicode(arguments.archive)
+                output = _unicode(arguments.archive)
 
     # Normalize files.
     if len(arguments.files) > 0 and isinstance(arguments.files[0], list):
@@ -367,7 +381,7 @@ if __name__ == "__main__":
 
         # Iterate over the given files to add to archive.
         for filename in arguments.files:
-            add_file(_ensure_unicode(filename))
+            add_file(_unicode(filename))
 
         # Set version for saving, and save.
         archive.version = version
