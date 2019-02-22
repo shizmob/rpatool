@@ -51,6 +51,7 @@ class RenPyArchive:
 
     RPA2_MAGIC = 'RPA-2.0 '
     RPA3_MAGIC = 'RPA-3.0 '
+    RPA3_2_MAGIC = 'RPA-3.2 '
 
     # For backward compatibility, otherwise Python3-packed archives won't be read by Python2
     PICKLE_PROTOCOL = 2
@@ -74,7 +75,9 @@ class RenPyArchive:
         self.handle.seek(0)
         magic = self.handle.readline().decode('utf-8')
 
-        if magic.startswith(self.RPA3_MAGIC):
+        if magic.startswith(self.RPA3_2_MAGIC):
+            return 3.2
+        elif magic.startswith(self.RPA3_MAGIC):
             return 3
         elif magic.startswith(self.RPA2_MAGIC):
             return 2
@@ -88,7 +91,7 @@ class RenPyArchive:
         self.handle.seek(0)
         indexes = None
 
-        if self.version == 2 or self.version == 3:
+        if self.version in [2, 3, 3.2]:
             # Fetch metadata.
             metadata = self.handle.readline()
             vals = metadata.split()
@@ -97,6 +100,10 @@ class RenPyArchive:
                 self.key = 0
                 for subkey in vals[2:]:
                     self.key ^= int(subkey, 16)
+            elif self.version == 3.2:
+                self.key = 0
+                for subkey in vals[3:]:
+                    self.key ^= int(subkey, 16)
 
             # Load in indexes.
             self.handle.seek(offset)
@@ -104,7 +111,7 @@ class RenPyArchive:
             indexes = _unpickle(contents)
 
             # Deobfuscate indexes.
-            if self.version == 3:
+            if self.version in [3, 3.2]:
                 obfuscated_indexes = indexes
                 indexes = {}
                 for i in obfuscated_indexes.keys():
