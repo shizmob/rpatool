@@ -133,7 +133,7 @@ class RenPyArchive:
             padding += chr(random.randint(1, 255))
             length -= 1
 
-        return padding
+        return bytes(padding, 'utf-8')
 
     # Converts a filename to archive format.
     def convert_filename(self, filename):
