@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
@@ -8,6 +8,20 @@ import codecs
 import pickle
 import errno
 import random
+try:
+    import pickle5 as pickle
+except:
+    import pickle
+    if sys.version_info < (3, 8):
+        print('warning: pickle5 module could not be loaded and Python version is < 3.8,', file=sys.stderr)
+        print('         newer Ren\'Py games may fail to unpack!', file=sys.stderr)
+        if sys.version_info >= (3, 5):
+            print('         if this occurs, fix it by installing pickle5:', file=sys.stderr)
+            print('             {} -m pip install pickle5'.format(sys.executable), file=sys.stderr)
+        else:
+            print('         if this occurs, please upgrade to a newer Python (>= 3.5).', file=sys.stderr)
+        print(file=sys.stderr)
+
 
 if sys.version_info[0] >= 3:
     def _unicode(text):
