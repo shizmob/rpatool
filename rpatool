@@ -17,7 +17,10 @@ if sys.version_info[0] >= 3:
         return text
 
     def _unmangle(data):
-        return data.encode('latin1')
+        if type(data) == bytes:
+            return data
+        else:
+            return data.encode('latin1')
 
     def _unpickle(data):
         # Specify latin1 encoding to prevent raw byte values from causing an ASCII decode error.
